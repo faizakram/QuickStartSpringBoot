@@ -1,4 +1,4 @@
-package com.app.audit;
+package com.app.auditlog;
 
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterThrowing;
