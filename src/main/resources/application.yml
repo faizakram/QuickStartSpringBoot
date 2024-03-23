@@ -1,6 +1,10 @@
 spring:
     application:
         name: QuickStartSpringBoot
+    freemarker:
+        template-loader-path: classpath:templates/ # or put the system location like this file:/opt/tomcat/freemarker-template/
+        cache: false
+        check-template-location: true
 server:
     port: 8080
 
