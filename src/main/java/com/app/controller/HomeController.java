@@ -12,4 +12,9 @@ public class HomeController {
     public ResponseEntity<String> home(){
         return new ResponseEntity<>("Running.....", HttpStatus.OK);
     }
+
+    @GetMapping("exception")
+    public ResponseEntity<String> exception(){
+        throw new RuntimeException("Hello Exception");
+    }
 }
