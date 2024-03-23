@@ -58,7 +58,6 @@ This guide will walk you through the steps to addFreeMarker templates to your Sp
 ## 1. Add Dependency
 Ensure that you have the necessary dependency in your `pom.xml` file to enable email functionality:
 
-## 1. Add Dependency
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
