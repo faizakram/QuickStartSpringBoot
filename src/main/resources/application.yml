@@ -1,6 +1,20 @@
 spring:
-    application:
-        name: QuickStartSpringBoot
+  application:
+    name: QuickStartSpringBoot
+  mail:
+    host: <<hostname>>
+    port: <<port>>
+    username: <<userName>>
+    password: <<password>>
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
+    default-encoding: UTF-8
 server:
-    port: 8080
+  port: 8080
+
+
 
