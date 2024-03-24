@@ -1,6 +1,12 @@
 spring:
-    application:
-        name: QuickStartSpringBoot
+  application:
+    name: QuickStartSpringBoot
 server:
-    port: 8080
+  port: 8080
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+app:
+  openapi:
+    endpoint: http://localhost:8080
