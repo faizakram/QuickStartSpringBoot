@@ -46,6 +46,7 @@ public class RedisConfig {
                                      RedisStreamListener redisStreamListener)  {
         var subscription = listenerContainer.receiveAutoAck(
                 Consumer.from("yourGroupName", "yourConsumerName"),
+                // the group (yourGroupName) and stream(yourStreamKey) need to be created on Redis Server
                 StreamOffset.create("yourStreamKey", ReadOffset.lastConsumed()),
                 redisStreamListener);
         listenerContainer.start();
