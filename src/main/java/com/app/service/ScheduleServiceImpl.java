@@ -1,13 +1,17 @@
 package com.app.service;
 
-import com.app.dto.Schedule;
-import com.app.model.ScheduleTask;
+import com.app.dto.ScheduleRequest;
+import com.app.dto.TaskRequest;
+import com.app.model.Schedular;
+import com.app.model.Task;
 import com.app.repository.ScheduleTaskRepository;
 import com.app.utils.CreateCronExpression;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -19,40 +23,52 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleTaskRepository scheduleTaskRepository;
 
     @Override
-    public Schedule addSchedule(Schedule schedule) {
-        String cron = switch (schedule.getScheduleType()) {
-            case MINUTE -> createCronExpression.generateEveryMinuteCronExpression();
-            case HOUR -> createCronExpression.generateHourlyCronExpression();
-            case DAILY -> createCronExpression.generateDailyCronExpression();
-            case WEEKLY -> createCronExpression.generateWeeklyCronExpression(schedule.getDay());
-            case MONTHLY -> createCronExpression.generateMonthlyCronExpression(schedule.getDay());
-        };
-        ScheduleTask scheduleTask = new ScheduleTask();
-        scheduleTask.setCustomScheduleDetails(cron);
-        scheduleTask.setName(schedule.getName());
-        scheduleTask.setScheduleType(schedule.getScheduleType());
-        scheduleTask.setIsActive(schedule.getIsActive());
-        scheduleTask = scheduleTaskRepository.save(scheduleTask);
-        log.info(cron);
-        schedule.setId(scheduleTask.getId());
-        taskSchedulingService.scheduleTask(scheduleTask);
-        return schedule;
-    }
-
-    @Override
-    public Schedule deleteSchedule(Long id) {
-        Optional<ScheduleTask> scheduleTaskOptional = scheduleTaskRepository.findById(id);
-        if(scheduleTaskOptional.isPresent()){
-            ScheduleTask scheduleTask = scheduleTaskOptional.get();
-            scheduleTask.setIsActive(false);
-            scheduleTask = scheduleTaskRepository.save(scheduleTask);
-            taskSchedulingService.cancelScheduledTask(scheduleTask.getId());
+    public ScheduleRequest addOrUpdateSchedule(ScheduleRequest scheduleRequest) {
+        Schedular schedule = scheduleTaskCreatedOrNot(scheduleRequest);
+        schedule.setName(scheduleRequest.getName());
+        schedule.setType(scheduleRequest.getType());
+        schedule.getTasks().clear();
+        for (TaskRequest taskRequest : scheduleRequest.getTasks()) {
+            String cron = switch (taskRequest.getScheduleType()) {
+                case MINUTE -> createCronExpression.generateEveryMinuteCronExpression();
+                case HOUR -> createCronExpression.generateHourlyCronExpression();
+                case DAILY -> createCronExpression.generateDailyCronExpression();
+                case WEEKLY -> createCronExpression.generateWeeklyCronExpression(taskRequest.getDay());
+                case MONTHLY -> createCronExpression.generateMonthlyCronExpression(taskRequest.getDay());
+            };
+            Task task = new Task();
+            task.setCron(cron);
+            task.setSchedular(schedule);
+            task.setParameters(taskRequest.getParameters());
+            schedule.getTasks().add(task);
         }
-        return null;
+        return setScheduleRequest(scheduleTaskRepository.save(schedule), scheduleRequest);
     }
 
-    @Override
-    public Schedule updateSchedule(Schedule schedule) {
-        return null;
+    private ScheduleRequest setScheduleRequest(Schedular schedule, ScheduleRequest scheduleRequest) {
+        taskSchedulingService.scheduleTasks(schedule);
+        scheduleRequest.setId(schedule.getId());
+        return scheduleRequest;
+    }
+
+
+    /**
+     * schedule Task Created Or Not
+     *
+     * @param schedule
+     * @return
+     */
+    private Schedular scheduleTaskCreatedOrNot(ScheduleRequest schedule) {
+        if (schedule.getId() != null) {
+            Optional<Schedular> scheduleTaskOptional = scheduleTaskRepository.findById(schedule.getId());
+            if (scheduleTaskOptional.isPresent()) {
+                Schedular schedular = scheduleTaskOptional.get();
+                taskSchedulingService.cancelScheduledTasks(schedular);
+                return schedular;
+            }
+        }
+        Schedular scheduleTask = new Schedular();
+        scheduleTask.setTasks(new ArrayList<>(schedule.getTasks().size()));
+        return scheduleTask;
     }
 }

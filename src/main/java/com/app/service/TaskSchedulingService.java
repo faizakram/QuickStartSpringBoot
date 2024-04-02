@@ -1,12 +1,13 @@
 package com.app.service;
 
-import com.app.model.ScheduleTask;
+
+import com.app.model.Schedular;
 
 public interface TaskSchedulingService {
 
-    void scheduleTask(ScheduleTask scheduleTask);
+    void scheduleTasks(Schedular scheduleTask);
 
-    void cancelScheduledTask(Long taskId);
 
-    void addOrUpdateTask(ScheduleTask scheduleTask);
+    void cancelScheduledTasks(Schedular scheduleTask);
+
 }

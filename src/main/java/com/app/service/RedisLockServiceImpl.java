@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 public class RedisLockServiceImpl implements RedisLockService {
     private final StringRedisTemplate stringRedisTemplate;
-    private final long defermentPeriod = 5000;
+    private static final long DEFERMENT_PERIOD = 5000;
     @Override
     public boolean shouldDeferExecution(String taskKey) {
         ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
@@ -20,7 +20,7 @@ public class RedisLockServiceImpl implements RedisLockService {
         if (lastExecutionTimeStr != null) {
             long lastExecutionTime = Long.parseLong(lastExecutionTimeStr);
             long currentTime = Instant.now().toEpochMilli();
-            return (currentTime - lastExecutionTime) < defermentPeriod;
+            return (currentTime - lastExecutionTime) < DEFERMENT_PERIOD;
         }
         return false;
     }

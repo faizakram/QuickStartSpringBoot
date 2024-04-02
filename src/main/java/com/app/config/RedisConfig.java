@@ -1,41 +1,55 @@
 package com.app.config;
 
 
-import org.springframework.beans.factory.annotation.Value;
+import com.app.service.RedisStreamListener;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisPassword;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.stream.Consumer;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
+import org.springframework.data.redis.connection.stream.ReadOffset;
+import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.util.StringUtils;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer;
+import org.springframework.data.redis.stream.Subscription;
+
+import java.time.Duration;
 
 @Configuration
+@Log4j2
 public class RedisConfig {
-    private String hostName;
-    private Integer port;
-    private String password;
-
-    public RedisConfig(@Value("${spring.data.redis.host}") String hostName, @Value("${spring.data.redis.port}")
-    Integer port, @Value("${spring.data.redis.password}") String password) {
-        this.hostName = hostName;
-        this.port = port;
-        this.password = password;
-    }
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(hostName, port);
-        if (!StringUtils.isEmpty(password))
-            redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
-        return new JedisConnectionFactory(redisStandaloneConfiguration);
-    }
-
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+        final RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericToStringSerializer<>(Object.class));
+        template.setValueSerializer(new GenericToStringSerializer<>(Object.class));
         return template;
     }
+
+    @Bean
+    public StreamMessageListenerContainer<String, ObjectRecord<String, String>> streamMessageListenerContainer(RedisConnectionFactory connectionFactory) {
+        var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
+                .pollTimeout(Duration.ofSeconds(1))
+                .targetType(String.class)
+                .build();
+        return StreamMessageListenerContainer.create(connectionFactory, options);
+    }
+
+    @Bean
+    public Subscription subscription(StreamMessageListenerContainer<String, ObjectRecord<String, String>> listenerContainer,
+                                     RedisStreamListener redisStreamListener)  {
+        var subscription = listenerContainer.receiveAutoAck(
+                Consumer.from("yourGroupName", "yourConsumerName"),
+                StreamOffset.create("yourStreamKey", ReadOffset.lastConsumed()),
+                redisStreamListener);
+        listenerContainer.start();
+        return subscription;
+    }
+
 }

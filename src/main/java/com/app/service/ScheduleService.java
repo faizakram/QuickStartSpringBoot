@@ -1,11 +1,9 @@
 package com.app.service;
 
-import com.app.dto.Schedule;
+
+import com.app.dto.ScheduleRequest;
 
 public interface ScheduleService {
-    Schedule addSchedule(Schedule schedule);
+    ScheduleRequest addOrUpdateSchedule(ScheduleRequest schedule);
 
-    Schedule deleteSchedule(Long id);
-
-    Schedule updateSchedule(Schedule schedule);
 }

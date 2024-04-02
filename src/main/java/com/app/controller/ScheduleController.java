@@ -1,30 +1,24 @@
 package com.app.controller;
 
-import com.app.dto.Schedule;
+import com.app.dto.ScheduleRequest;
 import com.app.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("schedule")
 public class ScheduleController {
 
-    private final ScheduleService ScheduleService;
+    private final ScheduleService scheduleService;
 
-    @PostMapping("add")
-    public ResponseEntity<Schedule> addSchedule(@RequestBody Schedule schedule) {
-        return new ResponseEntity<>(ScheduleService.addSchedule(schedule), HttpStatus.OK);
-    }
-
-    @PutMapping("update")
-    public ResponseEntity<Schedule> updateSchedule(@RequestBody Schedule schedule) {
-        return new ResponseEntity<>(ScheduleService.updateSchedule(schedule), HttpStatus.OK);
-    }
-    @DeleteMapping("delete")
-    public ResponseEntity<Schedule> deleteSchedule(@RequestParam Long id) {
-        return new ResponseEntity<>(ScheduleService.deleteSchedule(id), HttpStatus.OK);
+    @PostMapping
+    public ResponseEntity<ScheduleRequest> addOrUpdateSchedule(@RequestBody ScheduleRequest schedule) {
+        return new ResponseEntity<>(scheduleService.addOrUpdateSchedule(schedule), HttpStatus.OK);
     }
 }

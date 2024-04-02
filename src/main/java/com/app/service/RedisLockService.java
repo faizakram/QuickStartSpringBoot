@@ -1,7 +1,5 @@
 package com.app.service;
 
-import java.util.concurrent.TimeUnit;
-
 public interface RedisLockService {
 
     boolean shouldDeferExecution(String taskKey);
