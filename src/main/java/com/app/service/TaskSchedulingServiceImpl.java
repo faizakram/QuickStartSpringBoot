@@ -14,6 +14,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -37,50 +38,28 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
 
     @Override
     public void scheduleTask(ScheduleTask scheduleTask) {
-//        Runnable taskWrapper = () -> {
-//            String lockName = scheduleTask.getName()+" - "+scheduleTask.getId();
-//            Instant lockAtMostUntil = Instant.now().plusSeconds(600); // Lock for 10 minutes
-//            Instant lockAtLeastUntil = Instant.now().plusSeconds(300);
-//            LockConfiguration config = new LockConfiguration(lockName, lockAtMostUntil, lockAtLeastUntil);
-//            Optional<SimpleLock> lock = lockProvider.lock(config);
-//            try {
-//                lock.ifPresentOrElse(simpleLock -> {
-//                    try {
-//                        LockAssert.assertLocked();
-//                        // Execute the actual task logic here
-//                        log.info("Executing Task " + scheduleTask.getId());
-//                    } catch (Exception e) {
-//                        log.error("Error executing task: " + scheduleTask.getId(), e);
-//                    }
-//                }, () -> {
-//                    log.info("Could not acquire lock for task " + scheduleTask.getId());
-//                });
-//            } finally {
-//                lock.ifPresent(SimpleLock::unlock);
-//            }
-//        };
-        ScheduledFuture<?> future = taskScheduler.schedule(() -> this.executeTask(scheduleTask), new CronTrigger(scheduleTask.getCustomScheduleDetails()));
+        Runnable taskWrapper = () -> {
+            String lockName = scheduleTask.getName()+" - "+scheduleTask.getId();
+            Instant createdAt = Instant.now();
+            LockConfiguration config = new LockConfiguration(createdAt, lockName, Duration.ofMinutes(1), Duration.ofSeconds(10));
+            Optional<SimpleLock> lock = lockProvider.lock(config);
+            try {
+                lock.ifPresent(simpleLock -> {
+                    try {
+                        LockAssert.assertLocked();
+                        // Execute the actual task logic here
+                        log.info("Executing Task " + scheduleTask.getId());
+                    } catch (Exception e) {
+                        log.error("Error executing task: " + scheduleTask.getId(), e);
+                    }
+                });
+            } finally {
+                lock.ifPresent(SimpleLock::unlock);
+            }
+        };
+
+        ScheduledFuture<?> future = taskScheduler.schedule(taskWrapper, new CronTrigger(scheduleTask.getCustomScheduleDetails()));
         tasks.put(scheduleTask.getId(), future);
-    }
-
-    private void executeTask(ScheduleTask scheduleTask) {
-        String lockName = "myDynamicTask";
-        Instant lockAtMostUntil = Instant.now().plusSeconds(60); // Lock for 10 minutes
-        Instant lockAtLeastUntil = Instant.now().plusSeconds(30); // Minimum lock time
-
-        LockConfiguration config = new LockConfiguration(lockName, lockAtMostUntil, lockAtLeastUntil);
-        Optional<SimpleLock> lock = lockProvider.lock(config);
-        try {
-            lock.ifPresentOrElse(simpleLock -> {
-                LockAssert.assertLocked();
-                // Task logic here
-                log.info("Executing Task " + scheduleTask.getId());
-            }, () -> {
-                System.out.println("Could not acquire lock for task");
-            });
-        } finally {
-            lock.ifPresent(SimpleLock::unlock);
-        }
     }
 
     @Override
