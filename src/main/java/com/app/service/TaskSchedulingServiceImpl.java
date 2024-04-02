@@ -6,12 +6,17 @@ import com.app.repository.ScheduleTaskRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import net.javacrumbs.shedlock.core.LockAssert;
+import net.javacrumbs.shedlock.core.LockConfiguration;
+import net.javacrumbs.shedlock.core.LockProvider;
+import net.javacrumbs.shedlock.core.SimpleLock;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
@@ -19,8 +24,8 @@ import java.util.concurrent.ScheduledFuture;
 @RequiredArgsConstructor
 @Log4j2
 public class TaskSchedulingServiceImpl implements TaskSchedulingService {
-    private final RedisLockService redisLockService;
     private final TaskScheduler taskScheduler;
+    private final LockProvider lockProvider;
     private final ScheduleTaskRepository scheduleTaskRepository;
     private Map<Long, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
 
@@ -32,26 +37,50 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
 
     @Override
     public void scheduleTask(ScheduleTask scheduleTask) {
-        String lockKey = "lock:" + scheduleTask.getId();
-        Runnable taskWrapper = () -> {
-            String lockValue = UUID.randomUUID().toString();
-            if (redisLockService.shouldDeferExecution(lockKey)) {
-                log.info("Execution deferred due to recent execution.");
-                return;
-            } else if (!redisLockService.acquireLock(lockKey, lockValue, 30000)) {
-                log.info("Task " + scheduleTask.getId() + " is already running. Skipping execution.");
-                return;
-            }
-            try {
-                // Task execution logic here
-                log.info("Executing Task " + scheduleTask.getId());
-                redisLockService.updateLastExecutionTime(lockKey);
-            } finally {
-                redisLockService.releaseLock(lockKey, lockValue);
-            }
-        };
-        ScheduledFuture<?> future = taskScheduler.schedule(taskWrapper, new CronTrigger(scheduleTask.getCustomScheduleDetails()));
+//        Runnable taskWrapper = () -> {
+//            String lockName = scheduleTask.getName()+" - "+scheduleTask.getId();
+//            Instant lockAtMostUntil = Instant.now().plusSeconds(600); // Lock for 10 minutes
+//            Instant lockAtLeastUntil = Instant.now().plusSeconds(300);
+//            LockConfiguration config = new LockConfiguration(lockName, lockAtMostUntil, lockAtLeastUntil);
+//            Optional<SimpleLock> lock = lockProvider.lock(config);
+//            try {
+//                lock.ifPresentOrElse(simpleLock -> {
+//                    try {
+//                        LockAssert.assertLocked();
+//                        // Execute the actual task logic here
+//                        log.info("Executing Task " + scheduleTask.getId());
+//                    } catch (Exception e) {
+//                        log.error("Error executing task: " + scheduleTask.getId(), e);
+//                    }
+//                }, () -> {
+//                    log.info("Could not acquire lock for task " + scheduleTask.getId());
+//                });
+//            } finally {
+//                lock.ifPresent(SimpleLock::unlock);
+//            }
+//        };
+        ScheduledFuture<?> future = taskScheduler.schedule(() -> this.executeTask(scheduleTask), new CronTrigger(scheduleTask.getCustomScheduleDetails()));
         tasks.put(scheduleTask.getId(), future);
+    }
+
+    private void executeTask(ScheduleTask scheduleTask) {
+        String lockName = "myDynamicTask";
+        Instant lockAtMostUntil = Instant.now().plusSeconds(60); // Lock for 10 minutes
+        Instant lockAtLeastUntil = Instant.now().plusSeconds(30); // Minimum lock time
+
+        LockConfiguration config = new LockConfiguration(lockName, lockAtMostUntil, lockAtLeastUntil);
+        Optional<SimpleLock> lock = lockProvider.lock(config);
+        try {
+            lock.ifPresentOrElse(simpleLock -> {
+                LockAssert.assertLocked();
+                // Task logic here
+                log.info("Executing Task " + scheduleTask.getId());
+            }, () -> {
+                System.out.println("Could not acquire lock for task");
+            });
+        } finally {
+            lock.ifPresent(SimpleLock::unlock);
+        }
     }
 
     @Override
