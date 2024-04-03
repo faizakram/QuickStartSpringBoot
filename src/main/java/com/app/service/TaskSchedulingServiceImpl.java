@@ -1,9 +1,13 @@
 package com.app.service;
 
 
+import com.app.dto.ScheduleRequest;
+import com.app.dto.TaskRequest;
 import com.app.model.Schedular;
 import com.app.model.Task;
 import com.app.repository.ScheduleTaskRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -11,9 +15,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
@@ -25,7 +27,8 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
     private final TaskScheduler taskScheduler;
     private final ScheduleTaskRepository scheduleTaskRepository;
     private final RedisMessageQueueService redisMessageQueueService;
-    private Map<Long, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
+    private final Map<Long, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void initializeScheduledTasks() {
@@ -50,9 +53,11 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
                     // Task execution logic here
                     log.info("Executing Task " + task.getId());
                     Map<String, String> message = new HashMap<>();
-                    message.put("task", "Hello World");
+                    message.put("schedule", objectMapper.writeValueAsString(getScheduleRequest(scheduleTask)));
                     redisMessageQueueService.publishToStream("yourStreamKey", message);
                     redisLockService.updateLastExecutionTime(lockKey);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
                 } finally {
                     redisLockService.releaseLock(lockKey, lockValue);
                 }
@@ -60,6 +65,26 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
             ScheduledFuture<?> future = taskScheduler.schedule(taskWrapper, new CronTrigger(task.getCron()));
             tasks.put(scheduleTask.getId(), future);
         }
+    }
+
+    private ScheduleRequest getScheduleRequest(Schedular scheduleTask) {
+        ScheduleRequest scheduleRequest = new ScheduleRequest();
+        scheduleRequest.setId(scheduleTask.getId());
+        scheduleRequest.setName(scheduleTask.getName());
+        scheduleRequest.setType(scheduleTask.getType());
+        scheduleRequest.setTasks(getScheduleRequestTask(scheduleTask.getTasks()));
+        return scheduleRequest;
+    }
+
+    private List<TaskRequest> getScheduleRequestTask(List<Task> tasks) {
+        List<TaskRequest> taskRequests = new ArrayList<>(tasks.size());
+        for (Task task : tasks) {
+            TaskRequest taskRequest = new TaskRequest();
+            taskRequest.setId(task.getId());
+            taskRequest.setParameters(task.getParameters());
+            taskRequests.add(taskRequest);
+        }
+        return taskRequests;
     }
 
     private void cancelScheduledTask(Long taskId) {
