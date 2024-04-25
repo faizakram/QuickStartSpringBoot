@@ -1,6 +1,10 @@
 spring:
-    application:
-        name: QuickStartSpringBoot
+  application:
+    name: QuickStartSpringBoot
+  resources:
+    paths: D:/application/template/
 server:
-    port: 8080
+  port: 8080
+
+
 
