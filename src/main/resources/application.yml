@@ -1,6 +1,17 @@
 spring:
-    application:
-        name: QuickStartSpringBoot
+  datasource:
+    url: jdbc:mysql://coofun.local:3306/app_db_001
+    username: root
+    password: root
+  application:
+    name: QuickStartSpringBoot
+  flyway:
+    enabled: true
+    user: root
+    password: root
+    locations: classpath:db/migration
+    url: jdbc:mysql://coofun.local:3306/app_db_001
+    baseline-on-migrate: true
 server:
-    port: 8080
+  port: 8080
 
