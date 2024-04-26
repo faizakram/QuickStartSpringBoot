@@ -12,6 +12,7 @@ spring:
     locations: classpath:db/migration
     url: jdbc:mysql://coofun.local:3306/app_db_001
     baseline-on-migrate: true
+    sql-migration-prefix: V_
 server:
   port: 8080
 
