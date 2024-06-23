@@ -1,6 +1,19 @@
-spring:
-    application:
-        name: QuickStartSpringBoot
 server:
-    port: 8080
-
+  port: 8080
+spring:
+  application:
+    name: QuickStartSpringBoot
+  batch:
+    jdbc:
+      initialize-schema: always
+  datasource:
+    password: root
+    url: jdbc:mysql://coofun.local:3306/test
+    username: root
+  elasticsearch:
+    connection-timeout: 3s
+    socket-timeout: 3s
+    uris: http://coofun.local:9200
+  sql:
+    init:
+      mode: always
