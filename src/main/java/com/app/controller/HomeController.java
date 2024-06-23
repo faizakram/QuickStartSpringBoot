@@ -15,4 +15,10 @@ public class HomeController {
         String name = oAuth2User.getAttribute("name");
         return new ResponseEntity<>("Running....." +name, HttpStatus.OK);
     }
+
+    @GetMapping("/call/here")
+    public ResponseEntity<String> callHere(@AuthenticationPrincipal OAuth2User oAuth2User){
+        String name = oAuth2User.getAttribute("name");
+        return new ResponseEntity<>("Running....." +name, HttpStatus.OK);
+    }
 }

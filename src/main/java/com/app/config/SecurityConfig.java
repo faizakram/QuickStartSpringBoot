@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -17,6 +19,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().authenticated()
                 )
+//                .sessionManagement(session ->
+//                        session.sessionCreationPolicy(STATELESS))
                 .oauth2Login(Customizer.withDefaults());
         return http.build();
     }

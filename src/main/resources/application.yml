@@ -1,6 +1,16 @@
-spring:
-    application:
-        name: QuickStartSpringBoot
 server:
-    port: 8080
+  port: 8080
 
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          okta:
+            client-id: <<Client ID>>
+            client-secret: <<Client Secret>>
+            scope: openid+profile
+            redirect-uri: http://localhost:8080/call/here
+        provider:
+          okta:
+            issuer-uri: <<Issuer URI>>
