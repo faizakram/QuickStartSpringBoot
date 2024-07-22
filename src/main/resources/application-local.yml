@@ -1,4 +1,0 @@
-app:
-  logs:
-    path: C:/${spring.application.name}/logs
-

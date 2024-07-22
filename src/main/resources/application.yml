@@ -1,8 +1,6 @@
 spring:
-  profiles:
-    active: local
-  application:
-    name: QuickStartSpringBoot
+    application:
+        name: QuickStartSpringBoot
 server:
-  port: 8080
+    port: 8080
 
