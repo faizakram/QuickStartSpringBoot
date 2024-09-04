@@ -2,3 +2,10 @@ app:
   logs:
     path: C:/${spring.application.name}/logs
 
+aws:
+  s3:
+    enabled: true
+    region: us-east-1
+    accessKeyId: <<access key>>
+    secretAccessKey: <<secret access key>>
+    bucket-name: <<enter bucket name>>
