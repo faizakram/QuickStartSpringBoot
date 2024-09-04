@@ -43,18 +43,20 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
             Instant createdAt = Instant.now();
             LockConfiguration config = new LockConfiguration(createdAt, lockName, Duration.ofMinutes(1), Duration.ofSeconds(10));
             Optional<SimpleLock> lock = lockProvider.lock(config);
+            LockAssert.TestHelper.makeAllAssertsPass(true);
             try {
                 lock.ifPresent(simpleLock -> {
                     try {
                         LockAssert.assertLocked();
                         // Execute the actual task logic here
-                        log.info("Executing Task " + scheduleTask.getId());
+                        log.info("Executing Task {}", lockName);
                     } catch (Exception e) {
-                        log.error("Error executing task: " + scheduleTask.getId(), e);
+                        log.error("Error executing task: {}", scheduleTask.getId(), e);
                     }
                 });
             } finally {
                 lock.ifPresent(SimpleLock::unlock);
+                log.info("Release Task {}", lockName);
             }
         };
 

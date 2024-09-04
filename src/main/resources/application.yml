@@ -1,13 +1,8 @@
 spring:
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password:
   application:
     name: QuickStartSpringBoot
   datasource:
-    url: jdbc:mysql://coofun.local:3306/test
+    url: jdbc:mysql://coofun.local:3306/schedular
     username: root
     password: root
   jpa:
