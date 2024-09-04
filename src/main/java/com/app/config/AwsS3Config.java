@@ -10,7 +10,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 @Configuration
 @ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
@@ -25,10 +25,11 @@ public class AwsS3Config {
     private String secretAccessKey;
 
     @Bean
-    public S3Client s3Client() {
+    public S3AsyncClient s3Client() {
         try {
             log.info("Trying to S3Client create.");
-            return S3Client.builder()
+
+            return S3AsyncClient.builder()
                     .region(Region.of(awsRegion))
                     .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
                     .overrideConfiguration(ClientOverrideConfiguration.builder()
@@ -36,10 +37,10 @@ public class AwsS3Config {
                             .build())
                     .build();
         } catch (Exception e) {
-            log.error("Failed to create S3Client.", e);
+            log.error("Failed to create S3AsyncClient.", e);
             throw e;
         } finally {
-            log.info("S3Client created successfully.");
+            log.info("S3AsyncClient created successfully.");
         }
     }
 }
