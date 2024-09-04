@@ -28,7 +28,7 @@ public class TaskSchedulingServiceImpl implements TaskSchedulingService {
     private final TaskScheduler taskScheduler;
     private final LockProvider lockProvider;
     private final ScheduleTaskRepository scheduleTaskRepository;
-    private Map<Long, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
+    private final Map<Long, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void initializeScheduledTasks() {
