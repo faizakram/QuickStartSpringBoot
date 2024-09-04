@@ -1,8 +1,19 @@
 spring:
-  profiles:
-    active: local
   application:
     name: QuickStartSpringBoot
+  datasource:
+    url: jdbc:mysql://coofun.local:3306/schedular
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 server:
   port: 8080
+app:
+  default:
+    minute: 00
+    hour: 03
+
 
