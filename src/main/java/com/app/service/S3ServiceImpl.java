@@ -9,10 +9,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -77,6 +74,18 @@ public class S3ServiceImpl implements S3Service {
         } catch (SdkException e) {
             log.error("Error while downloading file from S3 Bucket: {}, Key: {}", bucketName, key, e);
             throw e;
+        }
+    }
+
+    public String createBucket(String bucketName) {
+        try {
+            CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
+                    .bucket(bucketName)
+                    .build();
+            CreateBucketResponse createBucketResponse = s3Client.createBucket(createBucketRequest);
+            return "Bucket created successfully: " + createBucketResponse.location();
+        } catch (S3Exception e) {
+            throw new RuntimeException("Failed to create bucket: " + e.awsErrorDetails().errorMessage(), e);
         }
     }
 }

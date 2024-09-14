@@ -9,4 +9,6 @@ public interface S3Service {
     boolean uploadFile(MultipartFile file, boolean isReadPublicly);
 
     InputStream downloadFileAsStream(String key);
+
+    String createBucket(String bucketName);
 }

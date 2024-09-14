@@ -38,4 +38,9 @@ public class S3Controller {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
+
+    @GetMapping("/create-bucket")
+    public ResponseEntity<String> createBucket(@RequestParam String bucketName) {
+        return ResponseEntity.ok(s3Service.createBucket(bucketName));
+    }
 }
