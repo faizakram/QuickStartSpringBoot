@@ -8,11 +8,16 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -88,4 +93,56 @@ public class S3ServiceImpl implements S3Service {
             throw new RuntimeException("Failed to create bucket: " + e.awsErrorDetails().errorMessage(), e);
         }
     }
+
+    @Override
+    public List<String> getBucketList() {
+        try {
+            ListBucketsResponse listBucketsResponse = s3Client.listBuckets();
+            return listBucketsResponse.buckets().stream()
+                    .map(Bucket::name)
+                    .toList();
+        } catch (S3Exception e) {
+            throw new RuntimeException("Failed to list buckets: " + e.awsErrorDetails().errorMessage(), e);
+        }
+    }
+
+    @Override
+    public Map<String, String> listBucketsWithRegions() {
+        try {
+            ListBucketsResponse listBucketsResponse = s3Client.listBuckets();
+
+            // Create a map to store bucket names with their respective regions
+            Map<String, String> bucketRegions = new HashMap<>();
+
+            for (var bucket : listBucketsResponse.buckets()) {
+                String bucketName = bucket.name();
+                String bucketRegion = getBucketRegion(bucketName);
+                bucketRegions.put(bucketName, bucketRegion);
+            }
+
+            return bucketRegions;
+
+        } catch (S3Exception e) {
+            throw new RuntimeException("Failed to list buckets: " + e.awsErrorDetails().errorMessage(), e);
+        }
+    }
+
+    private String getBucketRegion(String bucketName) {
+        try {
+            GetBucketLocationRequest locationRequest = GetBucketLocationRequest.builder()
+                    .bucket(bucketName)
+                    .build();
+
+            GetBucketLocationResponse locationResponse = s3Client.getBucketLocation(locationRequest);
+
+            // Translate the bucket location constraint to a region name
+            Region region = locationResponse.locationConstraintAsString() == null ? Region.US_EAST_1 :
+                    Region.of(locationResponse.locationConstraintAsString());
+
+            return region.id();
+        } catch (S3Exception e) {
+            return "Unknown"; // Handle the case where the region is not accessible or available
+        }
+    }
+
 }

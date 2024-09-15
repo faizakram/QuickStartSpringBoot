@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,5 +44,15 @@ public class S3Controller {
     @GetMapping("/create-bucket")
     public ResponseEntity<String> createBucket(@RequestParam String bucketName) {
         return ResponseEntity.ok(s3Service.createBucket(bucketName));
+    }
+
+    @GetMapping("/bucket-list")
+    public ResponseEntity<List<String>> getBucketList() {
+        return ResponseEntity.ok(s3Service.getBucketList());
+    }
+
+    @GetMapping("/list-buckets-with-regions")
+    public Map<String, String> listBucketsWithRegions() {
+        return s3Service.listBucketsWithRegions();
     }
 }
