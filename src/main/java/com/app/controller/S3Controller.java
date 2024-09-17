@@ -1,0 +1,88 @@
+package com.app.controller;
+
+import com.app.service.S3Service;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipOutputStream;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/files")
+public class S3Controller {
+
+    private final S3Service s3Service;
+
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file,
+                                             @RequestParam(value = "isReadPublicly", defaultValue = "false") boolean isReadPublicly) {
+        boolean isUploaded = s3Service.uploadFile(file, isReadPublicly);
+        if (isUploaded) {
+            return ResponseEntity.ok("File uploaded successfully: " + file.getOriginalFilename());
+        } else {
+            return ResponseEntity.status(500).body("Failed to upload file: " + file.getOriginalFilename());
+        }
+    }
+
+    @GetMapping("/download/{key}")
+    public ResponseEntity<InputStreamResource> downloadFile(@PathVariable String key) {
+        InputStream fileStream = s3Service.downloadFileAsStream(key);
+        InputStreamResource resource = new InputStreamResource(fileStream);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + key)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+    }
+
+    @GetMapping("/create-bucket")
+    public ResponseEntity<String> createBucket(@RequestParam String bucketName) {
+        return ResponseEntity.ok(s3Service.createBucket(bucketName));
+    }
+
+    @GetMapping("/bucket-list")
+    public ResponseEntity<List<String>> getBucketList() {
+        return ResponseEntity.ok(s3Service.getBucketList());
+    }
+
+    @GetMapping("/list-buckets-with-regions")
+    public Map<String, String> listBucketsWithRegions() {
+        return s3Service.listBucketsWithRegions();
+    }
+
+    @GetMapping("/download-all-files-zip")
+    public ResponseEntity<StreamingResponseBody> downloadAllFilesAsZip(@RequestParam String bucketName) {
+
+        // Streaming response to handle large files efficiently
+        StreamingResponseBody responseBody = outputStream -> {
+            try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
+                s3Service.streamAllFilesAsZip(bucketName, zos);
+            } catch (IOException e) {
+                throw new RuntimeException("Error while streaming files to output stream", e);
+            }
+        };
+
+        // Set headers for ZIP file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=all-files.zip");
+        headers.add("Content-Type", "application/zip");
+
+        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/move-files")
+    public String moveFiles(@RequestParam String sourceBucketName, @RequestParam String destinationBucketName) {
+        s3Service.moveFiles(sourceBucketName, destinationBucketName);
+        return "Files are being moved from " + sourceBucketName + " to " + destinationBucketName;
+    }
+}
