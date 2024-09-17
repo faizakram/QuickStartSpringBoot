@@ -14,7 +14,7 @@ public interface S3Service {
 
     String createBucket(String bucketName);
 
-    List<String> getBucketList();
+    List<String> getBucketList() throws RuntimeException;
 
     Map<String, String> listBucketsWithRegions();
 }

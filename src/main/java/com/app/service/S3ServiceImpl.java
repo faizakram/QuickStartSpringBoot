@@ -95,7 +95,7 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public List<String> getBucketList() {
+    public List<String> getBucketList() throws RuntimeException {
         try {
             ListBucketsResponse listBucketsResponse = s3Client.listBuckets();
             return listBucketsResponse.buckets().stream()
@@ -115,9 +115,8 @@ public class S3ServiceImpl implements S3Service {
             Map<String, String> bucketRegions = new HashMap<>();
 
             for (var bucket : listBucketsResponse.buckets()) {
-                String bucketName = bucket.name();
-                String bucketRegion = getBucketRegion(bucketName);
-                bucketRegions.put(bucketName, bucketRegion);
+                String bucketRegion = getBucketRegion(bucket.name());
+                bucketRegions.put(bucket.name(), bucketRegion);
             }
 
             return bucketRegions;
