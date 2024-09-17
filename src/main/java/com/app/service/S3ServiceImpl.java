@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -13,11 +14,16 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 @Log4j2
@@ -25,6 +31,8 @@ import java.util.stream.Collectors;
 public class S3ServiceImpl implements S3Service {
 
     private final S3Client s3Client;
+    private static final int THREAD_POOL_SIZE = 10; // Number of threads for concurrent execution
+
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
@@ -144,4 +152,103 @@ public class S3ServiceImpl implements S3Service {
         }
     }
 
+    @Override
+    public void streamAllFilesAsZip(String bucketName, ZipOutputStream zos) {
+        ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .build();
+
+        ListObjectsV2Response listObjectsResponse;
+        do {
+            listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+            List<S3Object> objects = listObjectsResponse.contents();
+
+            for (S3Object object : objects) {
+                addFileToZipStream(bucketName, object.key(), zos);
+            }
+
+        } while (listObjectsResponse.isTruncated());
+    }
+
+    private void addFileToZipStream(String bucketName, String keyName, ZipOutputStream zos) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(keyName)
+                .build();
+
+        try (ResponseInputStream<?> s3ObjectStream = s3Client.getObject(getObjectRequest)) {
+            zos.putNextEntry(new ZipEntry(keyName));
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = s3ObjectStream.read(buffer)) > 0) {
+                zos.write(buffer, 0, length);
+            }
+
+            zos.closeEntry();
+        } catch (IOException | S3Exception e) {
+            throw new RuntimeException("Failed to add file to ZIP: " + keyName, e);
+        }
+    }
+
+    @Override
+    public void moveFiles(String sourceBucketName, String destinationBucketName) {
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                .bucket(sourceBucketName)
+                .build();
+
+        try {
+            ListObjectsV2Response listObjectsResponse;
+            do {
+                listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+                List<S3Object> objects = listObjectsResponse.contents();
+
+                for (S3Object object : objects) {
+                    String keyName = object.key();
+                    // Submit the copy and delete tasks to be executed concurrently
+                    executorService.submit(() -> copyAndDeleteObject(sourceBucketName, destinationBucketName, keyName));
+                }
+
+            } while (listObjectsResponse.isTruncated());
+
+        } catch (S3Exception e) {
+            log.error("Failed to list objects from bucket: {} - {}", sourceBucketName, e.getMessage());
+        } finally {
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void copyAndDeleteObject(String sourceBucketName, String destinationBucketName, String keyName) {
+        try {
+            // Copy file to the destination bucket
+            CopyObjectRequest copyRequest = CopyObjectRequest.builder()
+                    .sourceBucket(sourceBucketName)
+                    .sourceKey(keyName)
+                    .destinationBucket(destinationBucketName)
+                    .destinationKey(keyName)
+                    .build();
+            s3Client.copyObject(copyRequest);
+            log.info("Copied file: {} from {} to {}", keyName, sourceBucketName, destinationBucketName);
+
+            // Delete file from the source bucket
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(sourceBucketName)
+                    .key(keyName)
+                    .build();
+            s3Client.deleteObject(deleteRequest);
+            log.info("Deleted file: {} from {}", keyName, sourceBucketName);
+
+        } catch (S3Exception e) {
+            log.error("Error while moving file: {} - {}", keyName, e.getMessage());
+        }
+    }
 }

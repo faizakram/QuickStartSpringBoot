@@ -4,14 +4,18 @@ import com.app.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,5 +58,31 @@ public class S3Controller {
     @GetMapping("/list-buckets-with-regions")
     public Map<String, String> listBucketsWithRegions() {
         return s3Service.listBucketsWithRegions();
+    }
+
+    @GetMapping("/download-all-files-zip")
+    public ResponseEntity<StreamingResponseBody> downloadAllFilesAsZip(@RequestParam String bucketName) {
+
+        // Streaming response to handle large files efficiently
+        StreamingResponseBody responseBody = outputStream -> {
+            try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
+                s3Service.streamAllFilesAsZip(bucketName, zos);
+            } catch (IOException e) {
+                throw new RuntimeException("Error while streaming files to output stream", e);
+            }
+        };
+
+        // Set headers for ZIP file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=all-files.zip");
+        headers.add("Content-Type", "application/zip");
+
+        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/move-files")
+    public String moveFiles(@RequestParam String sourceBucketName, @RequestParam String destinationBucketName) {
+        s3Service.moveFiles(sourceBucketName, destinationBucketName);
+        return "Files are being moved from " + sourceBucketName + " to " + destinationBucketName;
     }
 }
