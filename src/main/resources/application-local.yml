@@ -2,3 +2,7 @@ app:
   logs:
     path: C:/${spring.application.name}/logs
 
+spring:
+  web:
+    allow:
+      cors: http://localhost:8080,http://localhost:4200
