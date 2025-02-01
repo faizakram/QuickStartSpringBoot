@@ -2,3 +2,11 @@ app:
   logs:
     path: C:/${spring.application.name}/logs
 
+####################### START READ PROPERTIES FILE #######################
+spring:
+  messages:
+    basename: error_messages,success_messages  # Or provide full paths if needed
+    cache-duration: 3600
+    encoding: UTF-8
+  web:
+    locale: en
