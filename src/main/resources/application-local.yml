@@ -2,3 +2,7 @@ app:
   logs:
     path: C:/${spring.application.name}/logs
 
+spring:
+  redis:
+    host: localhost
+    port: 6379
