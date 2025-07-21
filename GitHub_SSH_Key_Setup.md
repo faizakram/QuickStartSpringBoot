@@ -66,14 +66,7 @@ Hi <your-username>! You've successfully authenticated, but GitHub does not provi
 
 ---
 
-## 📦 Step 6: Create a New GitHub Repository
-
-1. Visit: https://github.com/new
-2. Fill details → Click **Create repository**
-
----
-
-## 🚀 Step 7: Clone the Repository Using SSH
+## 🚀 Step 6: Clone the Repository Using SSH
 
 ```bash
 git clone git@github.com:your-username/my-repo.git
@@ -81,7 +74,7 @@ git clone git@github.com:your-username/my-repo.git
 
 ---
 
-## ✍️ Step 8: Start Working with Git
+## ✍️ Step 7: Start Working with Git
 
 ```bash
 cd my-repo
@@ -112,6 +105,5 @@ git push origin main
 | 3 | Copy public key |
 | 4 | Add key to GitHub |
 | 5 | Test SSH connection |
-| 6 | Create GitHub repository |
-| 7 | Clone via SSH |
-| 8 | Start version control |
+| 6 | Clone via SSH |
+| 7 | Start version control |
