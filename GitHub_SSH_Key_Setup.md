@@ -1,5 +1,7 @@
 
-# GitHub SSH Key Setup & Repository Creation – Step-by-Step Guide
+# GitHub SSH Key Setup – Step-by-Step Guide
+
+> **Note:** This guide has been prepared to assist in resolving the recent GitHub access issues we’ve encountered, particularly those related to SSH authentication. We hope it proves helpful in addressing these challenges smoothly.
 
 ## 🧩 Prerequisites
 
@@ -17,7 +19,7 @@ ssh-keygen -t ed25519 -C "your_email@example.com"
 ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 ```
 
-Accept default path or provide a custom one. Optionally add a passphrase.
+Accept the default path or provide a custom one. Optionally, add a passphrase.
 
 ---
 
@@ -48,40 +50,29 @@ Copy the contents manually or use:
 
 1. Go to [GitHub](https://github.com)
 2. Profile → Settings → SSH and GPG Keys → New SSH Key
-3. Add title and paste the key, then click **Add SSH Key**
+3. Add a title and paste your key, then click **Add SSH Key**
 
 ---
 
-## 🧪 Step 5: Test SSH Connection
+## 🔒 Step 5: If Your Organization Enforces SSO
+
+If your GitHub organization uses **SSO (Single Sign-On)**, you must **authorize** your SSH key after adding it:
+
+1. After adding the key, you'll see an option to **"Enable SSO"**
+2. Click **Enable SSO** and select the appropriate organization
+
+---
+
+## 🧪 Step 6: Test SSH Connection
 
 ```bash
 ssh -T git@github.com
 ```
 
-Respond with `yes` if prompted. You should see:
+If prompted, type `yes`. A successful message looks like:
 
 ```
 Hi <your-username>! You've successfully authenticated, but GitHub does not provide shell access.
-```
-
----
-
-## 🚀 Step 6: Clone the Repository Using SSH
-
-```bash
-git clone git@github.com:your-username/my-repo.git
-```
-
----
-
-## ✍️ Step 7: Start Working with Git
-
-```bash
-cd my-repo
-touch README.md
-git add README.md
-git commit -m "Initial commit"
-git push origin main
 ```
 
 ---
@@ -90,9 +81,9 @@ git push origin main
 
 | Error | Solution |
 |------|----------|
-| `Permission denied (publickey)` | Check if SSH key is added to GitHub and `ssh-agent` |
-| `Could not resolve hostname` | Check your internet or proxy settings |
-| `Repository not found` | Verify SSH URL and repo existence |
+| `Permission denied (publickey)` | Check if SSH key is added and SSO is enabled |
+| `Could not resolve hostname` | Check your internet connection or proxy settings |
+| `Repository not found` | Ensure you have access and the SSH URL is correct |
 
 ---
 
@@ -104,6 +95,5 @@ git push origin main
 | 2 | Add key to SSH Agent |
 | 3 | Copy public key |
 | 4 | Add key to GitHub |
-| 5 | Test SSH connection |
-| 6 | Clone via SSH |
-| 7 | Start version control |
+| 5 | Enable SSO if applicable |
+| 6 | Test SSH connection |
