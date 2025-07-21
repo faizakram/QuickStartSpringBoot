@@ -1,7 +1,7 @@
 
 # 📌 SSH Key Setup for GitHub Access – Organization Enforces SSO
 
-> **Short Description:**  
+> **Description:**  
 > Our organization has recently moved to the enterprise version of GitHub with Single Sign-On (SSO) enforcement. This guide provides clear steps to configure your SSH access correctly to avoid authentication issues while working with Git repositories.
 
 ---
