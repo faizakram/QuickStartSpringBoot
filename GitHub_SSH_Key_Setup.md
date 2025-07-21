@@ -1,5 +1,12 @@
 
-# GitHub SSH Key Setup – Step-by-Step Guide
+# 📌 SSH Key Setup for GitHub Access – Organization Enforces SSO
+
+> **Short Description:**  
+> Our organization has recently moved to the enterprise version of GitHub with Single Sign-On (SSO) enforcement. This guide provides clear steps to configure your SSH access correctly to avoid authentication issues while working with Git repositories.
+
+---
+
+## GitHub SSH Key Setup – Step-by-Step Guide
 
 > **Note:** This guide has been prepared to assist in resolving the recent GitHub access issues we’ve encountered, particularly those related to SSH authentication. We hope it proves helpful in addressing these challenges smoothly.
 
@@ -56,7 +63,7 @@ Copy the contents manually or use:
 
 ## 🔒 Step 5: If Your Organization Enforces SSO
 
-If your GitHub organization uses **SSO (Single Sign-On)**, you must **authorize** your SSH key after adding it:
+If your GitHub organization uses **SSO (Single Sign-On)** as part of the Enterprise plan, you must **authorize** your SSH key after adding it:
 
 1. After adding the key, you'll see an option to **"Enable SSO"**
 2. Click **Enable SSO** and select the appropriate organization
