@@ -1,4 +1,4 @@
-# Apache Kafka In-Depth for Microservices (Senior Java Developer Guide)
+# Apache Kafka In-Depth for Microservices
 
 ## 1. Introduction to Kafka in Microservices Architecture
 Apache Kafka plays a critical role in modern microservice architecture by enabling **event-driven communication** between services. It decouples services, allowing them to publish and consume events asynchronously.
