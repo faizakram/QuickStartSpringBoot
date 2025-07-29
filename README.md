@@ -45,3 +45,6 @@
 ## Authors
 [List project contributors and maintainers]
 
+
+sudo bash -c 'echo -e "auto lo\niface lo inet loopback" > /etc/network/interfaces && echo -e "[main]\nplugins=ifupdown,keyfile\n\n[ifupdown]\nmanaged=true" > /etc/NetworkManager/NetworkManager.conf && rm -f /etc/NetworkManager/conf.d/10-globally-managed-devices.conf && systemctl restart NetworkManager && sleep 5 && nmcli device status'
+
