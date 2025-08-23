@@ -1,4 +1,30 @@
 app:
   logs:
     path: C:/${spring.application.name}/logs
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+
+    # Producer Configuration
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: 1                        # Acknowledgment level: 0, 1, or all
+      retries: 3                     # Retry count for sending messages
+      batch-size: 16384              # Batch size for producer messages
+      linger-ms: 1                   # Delay in milliseconds before sending a batch
+      buffer-memory: 33554432        # Total buffer memory for producer
+
+    # Consumer Configuration
+    consumer:
+      group-id: test-group           # Consumer group ID
+      auto-offset-reset: earliest    # Where to start reading messages (earliest/latest/none)
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true       # Automatically commit offsets
+      auto-commit-interval: 1000     # Interval in milliseconds to commit offsets
+
+    # Template Default Topic
+    template:
+      default-topic: test-topic      # Default topic for KafkaTemplate
 
