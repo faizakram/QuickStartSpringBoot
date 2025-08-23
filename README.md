@@ -16,9 +16,9 @@
 
 ## Project Structure
 - **src/main/java**: Contains Java source code.
-- `com.example.demo`: Main package containing application code.
+- `com.app`: Main package containing application code.
 - **src/main/resources**: Contains application properties, static files, and templates.
-- `application.properties`: Configuration properties for the application.
+- `application.yml`: Configuration properties for the application.
 - `static/`: Directory for static resources like CSS, JavaScript, etc.
 - `templates/`: Directory for HTML templates.
 - **src/test**: Contains test source code.
@@ -26,24 +26,22 @@
 
 ## Dependencies
 - Spring Boot Starter Web: `spring-boot-starter-web`
+- Spring Boot Starter Mail: `spring-boot-starter-mail`
 - Spring Boot Starter Test: `spring-boot-starter-test`
 - [Add any additional dependencies here]
 
 ## API Documentation
-- [Link to API documentation if available]
+# Adding Email Service to Spring Boot Project
 
-## Contributing
-1. Fork the repository.
-2. Create a new branch: `git checkout -b feature/[feature_name]`
-3. Commit your changes: `git commit -am 'Add new feature'`
-4. Push to the branch: `git push origin feature/[feature_name]`
-5. Submit a pull request.
+## 1. Add Dependency
+Ensure that you have the necessary dependency in your `pom.xml` file to enable email functionality:
 
-## License
-[Specify the project's license, e.g., MIT License, Apache License]
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
 
-## Authors
-[List project contributors and maintainers]
 
 
 sudo bash -c 'echo -e "auto lo\niface lo inet loopback" > /etc/network/interfaces && echo -e "[main]\nplugins=ifupdown,keyfile\n\n[ifupdown]\nmanaged=true" > /etc/NetworkManager/NetworkManager.conf && rm -f /etc/NetworkManager/conf.d/10-globally-managed-devices.conf && systemctl restart NetworkManager && sleep 5 && nmcli device status'
